@@ -68,7 +68,7 @@ class HotspotHelper {
                     0,
                     dummyResultReceiver,
                     false,
-                    "com.matejdro.taskertethercontrol");
+                    "ryey.easer");
         }
     }
 
@@ -103,26 +103,31 @@ class HotspotHelper {
         return netConfig;
     }
 
+    boolean setTethering(boolean enable){
+        boolean apStatus = false;
+        try {
+            Class<ConnectivityManager> connectivityClass = ConnectivityManager.class;
+            if (enable) {
+                Field internalConnectivityManagerField = ConnectivityManager.class.getDeclaredField("mService");
+                internalConnectivityManagerField.setAccessible(true);
+                callStartTethering(internalConnectivityManagerField.get(connectivityManager));
+            } else {
+                Method stopTetheringMethod = connectivityClass.getDeclaredMethod("stopTethering", int.class);
+                stopTetheringMethod.invoke(connectivityManager, 0);
+            }
+            apStatus = true;
+        } catch (Exception e) {
+            apStatus = false;
+            Logger.e(e,"Error while changing hotspot state in Tethering method");
+        }
+        return apStatus;
+    }
+
     boolean setApStatus(WifiConfiguration netConfig, boolean enable) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method setWifiApMethod = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
         boolean apStatus = (boolean) setWifiApMethod.invoke(wifiManager, netConfig, enable);
         if (!apStatus) {
-            try {
-                Class<ConnectivityManager> connectivityClass = ConnectivityManager.class;
-                if (enable) {
-                    Field internalConnectivityManagerField = ConnectivityManager.class.getDeclaredField("mService");
-                    internalConnectivityManagerField.setAccessible(true);
-                    callStartTethering(internalConnectivityManagerField.get(connectivityManager));
-                } else {
-                    Method stopTetheringMethod = connectivityClass.getDeclaredMethod("stopTethering", int.class);
-                    stopTetheringMethod.invoke(connectivityManager, 0);
-                }
-                apStatus = true;
-
-            } catch (Exception e) {
-                apStatus = false;
-                Logger.e(e,"Error while changing hotspot state in Tethering method");
-            }
+            apStatus = setTethering(enable);
         }
         return apStatus;
     }
