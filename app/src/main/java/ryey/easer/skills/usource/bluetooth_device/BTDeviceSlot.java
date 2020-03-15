@@ -62,7 +62,7 @@ public class BTDeviceSlot extends AbstractSlot<BTDeviceUSourceData> {
     };
 
     private final IntentFilter filter;
-    
+
     {
         filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
